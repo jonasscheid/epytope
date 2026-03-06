@@ -34,7 +34,7 @@ from epytope.CleavagePrediction.PSSM import APSSMCleavageSitePredictor
 from epytope.EpitopePrediction.PSSM import APSSMEpitopePrediction
 from epytope.IO.Utils import capture_stdout
 
-class EpitopeAssembly(object):
+class EpitopeAssembly:
     """
         Implements the epitope assembly approach proposed by Toussaint et al.
         using proteasomal cleavage site prediction and formulating the problem as
@@ -236,7 +236,7 @@ class EpitopeAssembly(object):
         return result
 
 
-class ParetoEpitopeAssembly(object):
+class ParetoEpitopeAssembly:
     """
         This implementation extends Toussaint et al.s TSP implementation which a bi-objective approach
         that also minimizes the neoepitope formation at the junctions as second objective. (Unpublished)
@@ -727,7 +727,7 @@ def _spacer_design(ei, ej, k, en, cn, cl_pssm, epi_pssms, cleav_pos, allele_prob
         raise RuntimeError("Problem could not be solved. Please check your input.")
 
 
-class EpitopeAssemblyWithSpacer(object):
+class EpitopeAssemblyWithSpacer:
     """
 
         Implements the epitope assembly approach proposed by Toussaint et al.

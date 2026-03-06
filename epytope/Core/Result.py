@@ -11,12 +11,10 @@ __author__ = 'schubert'
 
 import abc
 import numpy
-from numpy.lib.arraysetops import isin
 import pandas
 from epytope.Core.Allele import Allele
 from epytope.Core.Peptide import Peptide
 from copy import deepcopy
-from sys import exit
 import logging
 
 
@@ -122,7 +120,7 @@ class EpitopePredictionResult(AResult):
         """
         df = self.copy(deep=False)
 
-        if type(others) == type(self):
+        if isinstance(others, type(self)):
             others = [others]
         
         # Concatenates self and to be merged dataframe(s)
@@ -130,7 +128,7 @@ class EpitopePredictionResult(AResult):
             df = pandas.concat([df, other], axis=1)
 
         # Merge result of multiple predictors in others per allele
-        df_merged = pandas.concat([group[1] for group in df.groupby(level=[0,1], axis=1)], axis=1)
+        df_merged = df.T.groupby(level=[0, 1]).first().T
     
         return EpitopePredictionResult(df_merged)
 
@@ -233,7 +231,7 @@ class CleavageSitePredictionResult(AResult):
         :return: A new merged :class:`~epytope.Core.Result.CleavageSitePredictionResult` object
         :rtype: :class:`~epytope.Core.Result.CleavageSitePredictionResult`
         """
-        if type(others) == type(self):
+        if isinstance(others, type(self)):
             others = [others]
         df = self
 
@@ -326,7 +324,7 @@ class CleavageFragmentPredictionResult(AResult):
         :return: new merged :class:`~epytope.Core.Result.CleavageFragmentPredictionResult` object
         :rtype: :class:`~epytope.Core.Result.CleavageFragmentPredictionResult`
         """
-        if type(others) == type(self):
+        if isinstance(others, type(self)):
             others = [others]
 
         return CleavageFragmentPredictionResult(pandas.concat([self]+others, axis=1))
@@ -383,7 +381,7 @@ class TAPPredictionResult(AResult):
         :return: A new merged :class:`~epytope.Core.Result.TAPPredictionResult` object
         :rtype: :class:`~epytope.Core.Result.TAPPredictionResult``
         """
-        if type(others) == type(self):
+        if isinstance(others, type(self)):
             others = [others]
 
         return TAPPredictionResult(pandas.concat([self]+others, axis=1))

@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        python-version: [3.7]
+        python-version: ['3.11', '3.12']
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -40,7 +40,7 @@ jobs:
         echo "PATH=$PATH"
     - name: Set up Python ${{ matrix.python-version }}
       run: |
-        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*' setuptools"==52.0" protobuf"<=3.20.1"
+        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*'
     - name: Activate conda environment
       run: |
         echo "/tmp/condaenv/bin" >> $GITHUB_PATH
@@ -50,14 +50,14 @@ jobs:
         pip install ./epytope/
     - name: Set up test environment
       run: |
-        conda install -p /tmp/condaenv -c conda-forge -c bioconda nose
+        pip install pytest
     - name: Run Tests - Cleavage Prediction
       working-directory: ./epytope/
       continue-on-error: true
-      run: nosetests -v epytope/test/external/TestExternalCleavagePrediction.py || echo "Cleavage Prediction" >> FAILED_TESTS
+      run: pytest -v epytope/test/external/TestExternalCleavagePrediction.py || echo "Cleavage Prediction" >> FAILED_TESTS
     - name: Run Tests - Epitope Prediction
       working-directory: ./epytope/
-      run: nosetests -v epytope/test/external/TestExternalEpitopePrediction.py || echo "Epitope Prediction" >> FAILED_TESTS
+      run: pytest -v epytope/test/external/TestExternalEpitopePrediction.py || echo "Epitope Prediction" >> FAILED_TESTS
     - name: Validate Test Results
       working-directory: ./epytope/
       run: |

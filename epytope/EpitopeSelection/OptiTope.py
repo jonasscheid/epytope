@@ -42,7 +42,7 @@ from epytope.Core.Result import EpitopePredictionResult
 from epytope.Core.Peptide import Peptide
 from epytope.IO.Utils import capture_stdout
 
-class OptiTope(object):
+class OptiTope:
     """
     This class implements the epitope selection functionality
     of OptiTope published by Toussaint et al. [1].

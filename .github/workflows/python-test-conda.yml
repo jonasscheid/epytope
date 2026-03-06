@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest]
-        python-version: [3.7]
+        python-version: ['3.11', '3.12']
     runs-on: ${{ matrix.platform }}
 
     steps:
@@ -22,7 +22,7 @@ jobs:
         echo "CONDA_PKGS_DIRS=/tmp/condapkgs" >> $GITHUB_ENV
     - name: Set up Python ${{ matrix.python-version }}
       run: |
-        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*' setuptools"==52.0" protobuf"<=3.20.1"
+        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*'
     - name: Activate conda environment
       run: |
         echo "/tmp/condaenv/bin" >> $GITHUB_PATH
@@ -31,6 +31,8 @@ jobs:
       run: |
         pip install .
     - name: Install Test dependencies
-      run: conda install -p /tmp/condaenv -c conda-forge -c bioconda nose nose-exclude glpk
+      run: |
+        pip install pytest
+        conda install -p /tmp/condaenv -c conda-forge glpk
     - name: Run Tests
-      run: nosetests --exclude-dir=epytope/test/external epytope
+      run: pytest epytope/test/ --ignore=epytope/test/external -v
