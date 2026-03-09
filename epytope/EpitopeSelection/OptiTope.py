@@ -196,13 +196,13 @@ class OptiTope:
         model = ConcreteModel()
 
         #set definition
-        model.Q = Set(initialize=variations)
+        model.Q = Set(initialize=sorted(variations))
 
-        model.E = Set(initialize=set(peps.keys()))
-        
-        model.A = Set(initialize=list(alleles_I.keys()))
-        model.E_var = Set(model.Q, initialize=lambda mode, v: epi_var[v])
-        model.A_I = Set(model.A, initialize=lambda model, a: alleles_I[a])
+        model.E = Set(initialize=sorted(peps.keys()))
+
+        model.A = Set(initialize=sorted(alleles_I.keys()))
+        model.E_var = Set(model.Q, initialize=lambda mode, v: sorted(epi_var[v]))
+        model.A_I = Set(model.A, initialize=lambda model, a: sorted(alleles_I[a]))
 
 
         #parameter definition

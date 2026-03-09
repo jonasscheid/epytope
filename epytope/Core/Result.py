@@ -138,23 +138,29 @@ class EpitopePredictionResult(AResult):
 
         :param d: dict with following structure: {allele: {scoretype: {peptide: score}}}
         :param peps: list of :class:`~epytope.Core.Peptide.Peptide`
-        :param method: str specifying the prediction method 
+        :param method: str specifying the prediction method
         :return: A new :class:`~epytope.Core.Result.EpitopePredictionResult` object
-        :rtype: :class:`~epytope.Core.Result.EpitopePredictionResult` 
+        :rtype: :class:`~epytope.Core.Result.EpitopePredictionResult`
         """
-        scoreType = numpy.asarray([list(m.keys()) for m in [metrics for a, metrics in d.items()]]).flatten()
-        alleles = numpy.asarray([numpy.repeat(a, len(set(scoreType))) for a in d]).flatten()
-        
-        meth = numpy.repeat(method, len(scoreType))
-        multi_cols = pandas.MultiIndex.from_arrays([alleles, meth, scoreType], names=["Allele", "Method", "ScoreType"])
-        df = pandas.DataFrame(float(0),index=pandas.Index(peps), columns=multi_cols)
-        df.index.name = 'Peptides'
-        # Fill DataFrame
+        peps = list(peps)
+        # Build column data directly aligned to peps, avoiding chained assignment
+        # which is broken by pandas Copy-on-Write (pandas >= 3.0)
+        col_keys = []
+        col_data = []
         for allele, metrics in d.items():
             for metric, pep_scores in metrics.items():
-                for pep, score in pep_scores.items():
-                    df[allele][method][metric][pep] = score
-        
+                col_keys.append((allele, method, metric))
+                col_data.append([pep_scores.get(p, 0.0) for p in peps])
+
+        multi_cols = pandas.MultiIndex.from_tuples(col_keys, names=["Allele", "Method", "ScoreType"])
+        df = pandas.DataFrame(
+            numpy.column_stack(col_data) if col_data else numpy.zeros((len(peps), 0)),
+            index=pandas.Index(peps, dtype=object),
+            columns=multi_cols,
+            dtype=float
+        )
+        df.index.name = 'Peptides'
+
         return EpitopePredictionResult(df)
 
 

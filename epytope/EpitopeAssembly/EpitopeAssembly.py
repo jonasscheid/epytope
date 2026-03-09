@@ -352,7 +352,7 @@ class ParetoEpitopeAssembly:
             test = generate_peptides_from_proteins(fragments.keys(), length)
             
             for index,row in epi_pred.iterrows():
-                nof_epis = int(sum(comparator(row[a],threshold.get(a.name, 0)) for a in _alleles))
+                nof_epis = int(sum(comparator(row[(a, ep_pred.name, 'Score')],threshold.get(a.name, 0)) for a in _alleles))
                 for protein in index.proteins.values():
                     start, stop = fragments[protein]
                     ep_edge_matrix[start,stop] += len(index.proteinPos[protein.transcript_id])*nof_epis
