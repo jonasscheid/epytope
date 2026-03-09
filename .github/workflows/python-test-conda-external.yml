@@ -30,33 +30,32 @@ jobs:
       working-directory: ./epytope-tools/
       run: |
         ./post.runner
-    - name: Set conda package directory
-      run: |
-        mkdir /tmp/condapkgs
-        echo "CONDA_PKGS_DIRS=/tmp/condapkgs" >> $GITHUB_ENV
     - name: Activate epytope-tools
       run: |
         echo "$PWD/epytope-tools/bin" >> $GITHUB_PATH
         echo "PATH=$PATH"
-    - name: Set up Python ${{ matrix.python-version }}
-      run: |
-        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*'
-    - name: Activate conda environment
-      run: |
-        echo "/tmp/condaenv/bin" >> $GITHUB_PATH
-        export PATH="/tmp/condaenv/bin:$PATH"
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        activate-environment: test
+        auto-activate-base: false
     - name: Install epytope
+      shell: bash -el {0}
       run: |
         pip install ./epytope/
     - name: Set up test environment
+      shell: bash -el {0}
       run: |
         pip install pytest
     - name: Run Tests - Cleavage Prediction
       working-directory: ./epytope/
+      shell: bash -el {0}
       continue-on-error: true
       run: pytest -v epytope/test/external/TestExternalCleavagePrediction.py || echo "Cleavage Prediction" >> FAILED_TESTS
     - name: Run Tests - Epitope Prediction
       working-directory: ./epytope/
+      shell: bash -el {0}
       run: pytest -v epytope/test/external/TestExternalEpitopePrediction.py || echo "Epitope Prediction" >> FAILED_TESTS
     - name: Validate Test Results
       working-directory: ./epytope/

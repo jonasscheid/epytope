@@ -16,23 +16,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set conda package directory
-      run: |
-        mkdir /tmp/condapkgs
-        echo "CONDA_PKGS_DIRS=/tmp/condapkgs" >> $GITHUB_ENV
-    - name: Set up Python ${{ matrix.python-version }}
-      run: |
-        $CONDA/bin/conda create -p /tmp/condaenv python==${{ matrix.python-version }}'.*'
-    - name: Activate conda environment
-      run: |
-        echo "/tmp/condaenv/bin" >> $GITHUB_PATH
-        export PATH="/tmp/condaenv/bin:$PATH"
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        activate-environment: test
+        auto-activate-base: false
     - name: Install epytope
+      shell: bash -el {0}
       run: |
         pip install .
     - name: Install Test dependencies
+      shell: bash -el {0}
       run: |
         pip install pytest
-        conda install -p /tmp/condaenv -c conda-forge glpk
+        conda install -c conda-forge glpk
     - name: Run Tests
+      shell: bash -el {0}
       run: pytest epytope/test/ --ignore=epytope/test/external -v
