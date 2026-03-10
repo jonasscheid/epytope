@@ -5,31 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v4.0.0 - 2026-03-06
 
-### `Added`
-
-- Added MHCFlurry 2.0 predictor class
-- Added ReadTheDocs configuration (`.readthedocs.yaml`)
-
 ### `Changed`
 
-- **BREAKING**: Minimum Python version raised to 3.11
-- **BREAKING**: Removed `mhcnuggets` support (`mhcnuggets-class-1`, `mhcnuggets-class-2` predictors)
-- **BREAKING**: `mhcflurry` is now an optional dependency — install with `pip install epytope[mhcflurry]`
-- **BREAKING**: Removed `setup.py` — build is now managed via `pyproject.toml`
-- Removed hard dependencies on `keras`, `h5py`, `mhcflurry`, and `mhcnuggets`
-- Updated pandas compatibility to support pandas 2.x and 3.x (replaced `applymap`, `groupby(axis=)`, `inplace=True`)
-- Replaced deprecated `abc.abstractproperty` with `@property` + `@abc.abstractmethod`
-- Modernized `super()` calls and class definitions throughout
-- Migrated CI from `nosetests` to `pytest`
-- Updated GitHub Actions to current versions
-- Refactored `MartsAdapter` to use attribute IDs as column names instead of BioMart display names
+- **BREAKING**: Minimum Python version raised to 3.11, build via `pyproject.toml`
+- **BREAKING**: Removed `mhcnuggets` predictors; `mhcflurry` is now optional (`pip install epytope[mhcflurry]`)
+- Full pandas 3.0 compatibility
+- Added MHCFlurry 2.0 predictor class
+- Migrated CI to `pytest` with Python 3.11/3.12 matrix
 
 ### `Fixed`
 
-- Fixed `__init__.py` string concatenation bug (missing comma in `__all__`)
 - Fixed `MartsAdapter` `KeyError` caused by inconsistent BioMart display-name headers
-- Fixed import of removed `imghdr` module (`MartsAdapter`)
-- Fixed `logging.warn` deprecation (`logging.warning`)
+- Fixed nondeterministic OptiTope results due to unordered set inputs to Pyomo
 
 ## v3.4.0 - 2024-01-10
 
