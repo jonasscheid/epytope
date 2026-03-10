@@ -262,6 +262,9 @@ class MHCFlurryPredictor_2_0(MHCFlurryPredictor_1_4_3):
     """
     Implements MHCFlurry 2.0
 
+    Uses Class1PresentationPredictor which combines binding affinity with
+    antigen processing predictions and provides percentile rank scores.
+
     .. note::
         T. J. O'Donnell, A. Rubinsteyn, and U. Laserson,
          "MHCflurry 2.0: Improved Pan-Allele Prediction of MHC Class I-Presented Peptides by
@@ -290,3 +293,77 @@ class MHCFlurryPredictor_2_0(MHCFlurryPredictor_1_4_3):
     @property
     def version(self):
         return self.__version
+
+    def predict(self, peptides, alleles=None, binary=False, **kwargs):
+
+        try:
+            from mhcflurry import Class1PresentationPredictor
+        except ImportError:
+            raise ImportError("mhcflurry >= 2.0 is required for MHCFlurry 2.0 predictions. "
+                              "Install with: pip install epytope[mhcflurry]")
+
+        if not isinstance(peptides, list):
+            peptides = [peptides]
+
+        if alleles is None:
+            alleles = self.supportedAlleles
+        else:
+            alleles = [a for a in alleles if a in self.supportedAlleles]
+
+        alleles_repr = {allele: self._represent(allele) for allele in alleles}
+
+        # test mhcflurry models are available => download if not
+        p = subprocess.call(['mhcflurry-downloads', 'path', 'models_class1_presentation'],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if p != 0:
+            logging.warning("mhcflurry presentation models must be downloaded.")
+            cp = subprocess.run(['mhcflurry-downloads', 'fetch', 'models_class1_presentation'],
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if cp.returncode != 0:
+                for line in cp.stdout.decode().splitlines():
+                    logging.error(line)
+                raise RuntimeError("mhcflurry failed to download presentation model files")
+
+        predictor = Class1PresentationPredictor.load()
+
+        peptide_objects = {}
+        for peptide in peptides:
+            peptide_objects[str(peptide)] = peptide
+
+        scores = defaultdict(defaultdict)
+        ranks = defaultdict(defaultdict)
+
+        for length, peps in itertools.groupby(peptides, key=len):
+            if length not in self.supportedLength:
+                logging.warning("Peptide length must be at least %i or at most %i for %s but is %i" % (
+                    min(self.supportedLength), max(self.supportedLength), self.name, length))
+                continue
+            peps = list(peps)
+
+            for a in alleles:
+                pep_strs = [str(p) for p in peps]
+                df = predictor.predict(
+                    peptides=pep_strs,
+                    alleles=[alleles_repr[a]] * len(pep_strs),
+                    verbose=0
+                )
+                for p, row in zip(peps, df.itertuples()):
+                    affinity = row.affinity
+                    percentile = row.affinity_percentile
+                    if binary:
+                        scores[a][p] = 1.0 if affinity <= 500 else 0.0
+                    else:
+                        scores[a][p] = 1 - math.log(max(affinity, 1e-10), 50000)
+                    ranks[a][p] = percentile
+
+        if not scores:
+            raise ValueError("No predictions could be made with " + self.name +
+                            " for given input. Check your epitope length and HLA allele combination.")
+
+        result = {allele: {
+            "Score": list(scores.values())[j],
+            "Rank": list(ranks.values())[j]
+        } for j, allele in enumerate(alleles)}
+
+        df_result = EpitopePredictionResult.from_dict(result, peptide_objects.values(), self.name)
+        return df_result
